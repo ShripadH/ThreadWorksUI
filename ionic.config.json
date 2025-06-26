@@ -1,0 +1,7 @@
+{
+  "name": "MobileUI",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}
