@@ -1,0 +1,41 @@
+ion-card {
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+ion-button {
+  --border-radius: 8px;
+}
+
+.measurement-card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+// Phase selector scrolling
+ion-card-content {
+  div[style*="overflow-x: auto"] {
+    scrollbar-width: thin;
+    scrollbar-color: #888 #f1f1f1;
+    
+    &::-webkit-scrollbar {
+      height: 6px;
+    }
+    
+    &::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 3px;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 3px;
+      
+      &:hover {
+        background: #555;
+      }
+    }
+  }
+}
+

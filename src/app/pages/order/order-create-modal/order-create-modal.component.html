@@ -1,0 +1,99 @@
+<ion-modal [isOpen]="isOpen" (didDismiss)="close()">
+  <ng-template>
+    <ion-header class="ion-no-border">
+      <ion-toolbar>
+        <ion-title>Create Order</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="close()">
+            <ion-icon name="close"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content class="ion-padding">
+      <div *ngIf="!companyId && companies.length === 0" class="ion-text-center ion-margin-vertical" style="padding: 20px; background: #f8f9fa; border-radius: 12px; border: 1px solid #e9ecef;">
+        <ion-icon name="business-outline" style="font-size: 3em; color: #6c757d; margin-bottom: 12px;"></ion-icon>
+        <p style="color: #495057; margin-bottom: 16px; font-size: 1em;">No companies available. Please create a company first.</p>
+        <ion-button shape="round" color="primary" (click)="navigateToCompanyPage()">
+          <ion-icon name="add-circle-outline" slot="start"></ion-icon>
+          Create Company
+        </ion-button>
+      </div>
+      <form (ngSubmit)="submit()" *ngIf="companyId || companies.length > 0">
+        <ion-item class="ion-margin-bottom" *ngIf="!companyId">
+          <ion-label position="stacked">Company</ion-label>
+          <ion-select [(ngModel)]="newOrder.companyId" name="companyId" required>
+            <ion-select-option *ngFor="let c of companies" [value]="c.id">{{ c.companyName }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item class="ion-margin-bottom" *ngIf="companyId">
+          <ion-label position="stacked">Company</ion-label>
+          <ion-input [value]="companyName" readonly></ion-input>
+        </ion-item>
+        <ion-item class="ion-margin-bottom">
+          <ion-label position="stacked">Order Date</ion-label>
+          <ion-input type="date" [(ngModel)]="newOrder.orderDate" name="orderDate" required></ion-input>
+        </ion-item>
+        <ion-item class="ion-margin-bottom">
+          <ion-label position="stacked">Completion Date</ion-label>
+          <ion-input type="date" [(ngModel)]="newOrder.completionDate" name="completionDate"></ion-input>
+        </ion-item>
+        <ion-item class="ion-margin-bottom">
+          <ion-label position="stacked">Delivery Date</ion-label>
+          <ion-input type="date" [(ngModel)]="newOrder.deliveryDate" name="deliveryDate"></ion-input>
+        </ion-item>
+        <div class="ion-margin-bottom" style="padding: 0 16px;">
+          <ion-label position="stacked" style="margin-bottom: 8px; display: block;">Measurements File (Optional)</ion-label>
+          <input 
+            type="file" 
+            #fileInput
+            accept=".xlsx,.xls,.csv"
+            (change)="onFileSelected($event)"
+            style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.95em;"
+          />
+          <div *ngIf="selectedFile" style="margin-top: 8px; color: #3a8bfd; font-size: 0.9em; font-weight: 500;">
+            <ion-icon name="document-outline" style="vertical-align: middle;"></ion-icon>
+            {{ selectedFile.name }}
+          </div>
+        </div>
+        <div style="max-height: 260px; overflow-y: auto; margin-bottom: 16px;" *ngIf="!loadingPhases && phasesByCategory && getCategoryKeys().length">
+          <ion-list>
+            <ng-container *ngFor="let category of getCategoryKeys()">
+              <ion-item-divider color="light">
+                <span style="font-size: 1.2em;">{{ phasesByCategory[category][0].icon || '📦' }}</span>
+                <span style="margin-left: 8px; font-weight: bold;">{{ category }}</span>
+              </ion-item-divider>
+              <ion-item *ngFor="let phase of phasesByCategory[category]">
+                <ion-checkbox slot="start"
+                  [checked]="selectedPhaseIds.includes(phase.id)"
+                  [disabled]="phase.isMandatory"
+                  (ionChange)="onPhaseToggle(phase.id, $event.detail.checked)">
+                </ion-checkbox>
+                <ion-label>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <span>{{ phase.phaseName }}</span>
+                    <ion-badge color="primary" *ngIf="phase.isMandatory" style="font-size: 0.7em;">Mandatory</ion-badge>
+                  </div>
+                </ion-label>
+              </ion-item>
+            </ng-container>
+          </ion-list>
+        </div>
+        <div *ngIf="loadingPhases" style="text-align: center; margin: 20px;">
+          <ion-spinner name="crescent"></ion-spinner>
+          <p style="color: #666; font-size: 0.9em;">Loading phases...</p>
+        </div>
+        <div *ngIf="createOrderError" style="color:#c00; margin-bottom:8px;">{{ createOrderError }}</div>
+        <div style="display: flex; gap: 12px; margin-top: 18px; justify-content: center;">
+          <ion-button shape="round" type="submit" color="primary" [disabled]="creatingOrder">
+            <ion-spinner *ngIf="creatingOrder" name="crescent"></ion-spinner>
+            <span *ngIf="!creatingOrder">Create</span>
+          </ion-button>
+          <ion-button shape="round" type="button" color="secondary" (click)="close()" [disabled]="creatingOrder">
+            Cancel
+          </ion-button>
+        </div>
+      </form>
+    </ion-content>
+  </ng-template>
+</ion-modal> 

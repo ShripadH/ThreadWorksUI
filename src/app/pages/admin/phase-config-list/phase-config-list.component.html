@@ -1,0 +1,152 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/dashboard"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Phase Configurations</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="initializeDefaults()">
+        <ion-icon name="download-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ng-container *ngIf="loading">
+    <ion-spinner name="crescent"></ion-spinner> Loading phase configurations...
+  </ng-container>
+
+  <ng-container *ngIf="error && !loading">
+    <ion-text color="danger">{{ error }}</ion-text>
+  </ng-container>
+
+  <ng-container *ngIf="!loading && !error">
+    <ion-card *ngFor="let phase of phaseConfigs" class="ion-margin-bottom">
+      <ion-item lines="none">
+        <div slot="start" style="font-size: 2em;">{{ phase.icon }}</div>
+        <ion-label>
+          <h2 class="ion-text-wrap ion-text-bold">{{ phase.phaseName }}</h2>
+          <p class="ion-text-wrap ion-text-secondary" style="font-size:0.9em;">
+            Category: {{ phase.category }} • Type: {{ phase.movementType }}
+          </p>
+          <p class="ion-text-wrap" style="font-size:0.85em;">
+            <ion-badge color="primary" *ngIf="phase.isMandatory">Mandatory</ion-badge>
+            <ion-badge color="success" *ngIf="phase.canSkip">Can Skip</ion-badge>
+            <ion-badge color="warning" *ngIf="phase.canRunInParallel">Parallel</ion-badge>
+            <ion-badge color="danger" *ngIf="!phase.isActive">Inactive</ion-badge>
+          </p>
+          <p class="ion-text-wrap ion-text-secondary" style="font-size:0.85em;">
+            Sequence: {{ phase.sequenceOrder }} • Key: {{ phase.phaseKey }}
+          </p>
+        </ion-label>
+        <div slot="end" style="display: flex; gap: 8px; align-items: center;">
+          <ion-button fill="clear" size="small" (click)="openEditModal(phase); $event.stopPropagation()">
+            <ion-icon name="create-outline"></ion-icon>
+          </ion-button>
+          <ion-button fill="clear" size="small" color="danger" (click)="confirmDeletePhase(phase); $event.stopPropagation()">
+            <ion-icon name="trash-outline"></ion-icon>
+          </ion-button>
+        </div>
+      </ion-item>
+    </ion-card>
+  </ng-container>
+
+  <ion-fab slot="fixed" vertical="bottom" horizontal="end">
+    <ion-fab-button color="primary" (click)="openAddModal()">
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+
+  <!-- Add/Edit Modal -->
+  <ion-modal [isOpen]="showModal" (didDismiss)="closeModal()">
+    <ng-template>
+      <ion-header class="ion-no-border">
+        <ion-toolbar>
+          <ion-title>{{ isEdit ? 'Edit Phase' : 'Add Phase' }}</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="closeModal()">
+              <ion-icon name="close"></ion-icon>
+            </ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding">
+        <form (ngSubmit)="savePhase()">
+          <ion-item class="ion-margin-bottom">
+            <ion-label position="stacked">Phase Name *</ion-label>
+            <ion-input [(ngModel)]="modalPhase.phaseName" name="phaseName" required></ion-input>
+          </ion-item>
+
+          <ion-item class="ion-margin-bottom">
+            <ion-label position="stacked">Phase Key</ion-label>
+            <ion-input [(ngModel)]="modalPhase.phaseKey" name="phaseKey" placeholder="Auto-generated if empty"></ion-input>
+          </ion-item>
+
+          <ion-item class="ion-margin-bottom">
+            <ion-label position="stacked">Category *</ion-label>
+            <ion-select [(ngModel)]="modalPhase.category" name="category" required>
+              <ion-select-option *ngFor="let cat of categories" [value]="cat">{{ cat }}</ion-select-option>
+            </ion-select>
+          </ion-item>
+
+          <ion-item class="ion-margin-bottom">
+            <ion-label position="stacked">Movement Type *</ion-label>
+            <ion-select [(ngModel)]="modalPhase.movementType" name="movementType" required>
+              <ion-select-option value="order-level">Order Level</ion-select-option>
+              <ion-select-option value="measurement-level">Measurement Level</ion-select-option>
+            </ion-select>
+          </ion-item>
+
+          <ion-item class="ion-margin-bottom">
+            <ion-label position="stacked">Icon (Emoji)</ion-label>
+            <ion-input [(ngModel)]="modalPhase.icon" name="icon" placeholder="📦"></ion-input>
+          </ion-item>
+
+          <ion-item class="ion-margin-bottom">
+            <ion-label position="stacked">Sequence Order</ion-label>
+            <ion-input type="number" [(ngModel)]="modalPhase.sequenceOrder" name="sequenceOrder" required></ion-input>
+          </ion-item>
+
+          <ion-item class="ion-margin-bottom">
+            <ion-label>Is Mandatory?</ion-label>
+            <ion-checkbox slot="end" [(ngModel)]="modalPhase.isMandatory" name="isMandatory"></ion-checkbox>
+          </ion-item>
+
+          <ion-item class="ion-margin-bottom">
+            <ion-label>Can Skip?</ion-label>
+            <ion-checkbox slot="end" [(ngModel)]="modalPhase.canSkip" name="canSkip"></ion-checkbox>
+          </ion-item>
+
+          <ion-item class="ion-margin-bottom">
+            <ion-label>Can Run in Parallel?</ion-label>
+            <ion-checkbox slot="end" [(ngModel)]="modalPhase.canRunInParallel" name="canRunInParallel"></ion-checkbox>
+          </ion-item>
+
+          <ion-item class="ion-margin-bottom">
+            <ion-label>Is Active?</ion-label>
+            <ion-checkbox slot="end" [(ngModel)]="modalPhase.isActive" name="isActive"></ion-checkbox>
+          </ion-item>
+
+          <ion-footer>
+            <ion-toolbar>
+              <ion-buttons slot="end">
+                <ion-button type="submit" color="primary">{{ isEdit ? 'Save' : 'Add' }}</ion-button>
+              </ion-buttons>
+            </ion-toolbar>
+          </ion-footer>
+        </form>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  <!-- Delete Alert -->
+  <ion-alert
+    [isOpen]="showDeleteAlert"
+    header="Deactivate Phase"
+    message="Are you sure you want to deactivate this phase configuration?"
+    [buttons]="deleteAlertButtons">
+  </ion-alert>
+</ion-content>
+
+

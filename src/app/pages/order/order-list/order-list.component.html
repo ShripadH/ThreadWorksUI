@@ -1,0 +1,56 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button routerLink="/dashboard">
+        <ion-icon slot="icon-only" name="home-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>Orders</ion-title>
+    <ion-buttons slot="end">
+      <ion-menu-button menu="right-menu"></ion-menu-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-searchbar [(ngModel)]="searchTerm" placeholder="Filter by company name..." class="ion-margin-bottom"></ion-searchbar>
+  <ng-container *ngIf="loading">
+    <ion-spinner name="crescent"></ion-spinner> Loading orders...
+  </ng-container>
+  <ng-container *ngIf="error && !loading">
+    <ion-text color="danger">{{ error }}</ion-text>
+  </ng-container>
+  <ng-container *ngIf="!loading && !error">
+    <div *ngIf="filteredOrders.length === 0">
+      <ion-text color="medium">No orders found.</ion-text>
+    </div>
+    <ion-card *ngFor="let order of filteredOrders" class="ion-margin-bottom" (click)="goToDetails(order)">
+      <ion-item lines="none" class="ion-align-items-center">
+        <ion-avatar slot="start" style="background:#f3e8ff; color:#a259ff; border-radius:12px; width:44px; height:44px; display:flex; align-items:center; justify-content:center;">
+          <ion-icon name="document-text-outline" style="font-size:1.6rem;"></ion-icon>
+        </ion-avatar>
+        <ion-label>
+          <h2 class="ion-text-wrap ion-text-bold" style="margin-bottom:2px;">Order Date: {{ order.orderDate | date }}</h2>
+          <p class="ion-text-wrap ion-text-secondary" style="font-size:0.95em; margin-bottom:0;">Status: {{ order.status }}</p>
+          <p class="ion-text-wrap ion-text-secondary" style="font-size:0.95em; margin-bottom:0;">Company: {{ order.companyName }}</p>
+          <p class="ion-text-wrap ion-text-secondary" style="font-size:0.95em; margin-bottom:0;">Delivery: {{ order.deliveryDate | date }}</p>
+          <p class="ion-text-wrap ion-text-secondary" style="font-size:0.95em; margin-bottom:0;">Completion: {{ order.completionDate | date }}</p>
+        </ion-label>
+      </ion-item>
+    </ion-card>
+  </ng-container>
+
+  <ion-fab slot="fixed" vertical="bottom" horizontal="end">
+    <ion-fab-button color="primary" (click)="openCreateOrderModal()">
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+
+  <app-order-create-modal
+    [companies]="companies"
+    [companyId]="preSelectedCompanyId"
+    [isOpen]="showCreateOrderModal"
+    (didDismiss)="closeCreateOrderModal()"
+    (orderCreated)="onOrderCreated($event)">
+  </app-order-create-modal>
+</ion-content> 

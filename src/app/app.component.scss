@@ -1,0 +1,15 @@
+ion-app, .ion-page {
+  font-family: 'WorkSans-Regular', Inter, Arial, sans-serif;
+  background: var(--color-notWhite);
+  color: var(--color-darkText);
+}
+ion-menu {
+  --background: var(--color-notWhite);
+  box-shadow: 0 2px 8px var(--shadow-color2);
+}
+ion-toolbar, ion-title {
+  font-family: 'WorkSans-Bold', Inter, Arial, sans-serif;
+}
+ion-content {
+  background: var(--color-notWhite);
+}

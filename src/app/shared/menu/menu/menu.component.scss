@@ -1,0 +1,27 @@
+ion-list {
+  background: var(--color-notWhite);
+  font-family: 'WorkSans-Regular', Inter, Arial, sans-serif;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px var(--shadow-color2);
+  padding: 8px 0;
+}
+ion-item {
+  border-radius: 8px;
+  margin-bottom: 4px;
+  font-family: 'WorkSans-Regular', Inter, Arial, sans-serif;
+  --background: transparent;
+  --color: var(--color-darkText);
+  --min-height: 48px;
+}
+ion-label h2, ion-label p {
+  font-family: 'WorkSans-SemiBold', Inter, Arial, sans-serif;
+  margin: 0;
+}
+ion-label p {
+  font-family: 'WorkSans-Regular', Inter, Arial, sans-serif;
+  color: var(--color-darkText);
+  font-size: 0.9rem;
+}
+.material-icons, ion-icon {
+  color: var(--color-darkgrey);
+}

@@ -1,0 +1,107 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button routerLink="/dashboard">
+        <ion-icon slot="icon-only" name="home-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>Company</ion-title>
+    <ion-buttons slot="end">
+      <ion-menu-button menu="right-menu"></ion-menu-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-searchbar 
+    [(ngModel)]="searchTerm" 
+    placeholder="Search companies..."
+    class="ion-margin-bottom">
+  </ion-searchbar>
+
+  <ng-container *ngIf="filteredCompanies.length; else noCompanies">
+    <ion-card *ngFor="let company of filteredCompanies" class="ion-margin-bottom company-card-list" (click)="goToDetails(company)">
+      <ion-item lines="none" class="ion-align-items-center">
+        <ion-avatar slot="start" [ngStyle]="{'background': getAvatarBg(company), 'color': getAvatarColor(company), 'border-radius': '12px', 'width': '44px', 'height': '44px', 'display': 'flex', 'align-items': 'center', 'justify-content': 'center'}">
+          <ion-icon name="business-outline" style="font-size: 1.6rem;"></ion-icon>
+        </ion-avatar>
+        <ion-label>
+          <h2 class="ion-text-wrap ion-text-bold" style="margin-bottom: 2px;">{{ company.companyName }}</h2>
+          <p class="ion-text-wrap ion-text-secondary" style="font-size: 0.95em; margin-bottom: 0;">{{ company.companyDescription }} • {{ company.contactPerson }} ({{ company.contactNumber }})</p>
+        </ion-label>
+        <div slot="end" style="display: flex; gap: 8px; align-items: center;">
+          <ion-button fill="clear" size="small" (click)="openEditCompanyModal(company); $event.stopPropagation()">
+            <ion-icon name="create-outline"></ion-icon>
+          </ion-button>
+          <ion-button fill="clear" size="small" color="danger" (click)="confirmDeleteCompany(company); $event.stopPropagation()">
+            <ion-icon name="trash-outline"></ion-icon>
+          </ion-button>
+        </div>
+      </ion-item>
+    </ion-card>
+  </ng-container>
+  <ng-template #noCompanies>
+    <div class="ion-text-center ion-margin-top">
+      <p>No companies found.</p>
+    </div>
+  </ng-template>
+
+  <ion-fab slot="fixed" vertical="bottom" horizontal="end">
+    <ion-fab-button color="primary" (click)="openAddCompanyModal()">
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+
+  <ion-modal [isOpen]="showModal" (didDismiss)="closeModal()">
+    <ng-template>
+      <ion-header class="ion-no-border">
+        <ion-toolbar>
+          <ion-title>{{ isEdit ? 'Edit Company' : 'Add Company' }}</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="closeModal()">
+              <ion-icon name="close"></ion-icon>
+            </ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding">
+        <form (ngSubmit)="saveCompany()">
+          <ion-item class="ion-margin-bottom">
+            <ion-label position="stacked">Company Name</ion-label>
+            <ion-input [(ngModel)]="modalCompany.companyName" name="companyName" required></ion-input>
+          </ion-item>
+          <ion-item class="ion-margin-bottom">
+            <ion-label position="stacked">Description</ion-label>
+            <ion-input [(ngModel)]="modalCompany.companyDescription" name="companyDescription"></ion-input>
+          </ion-item>
+          <ion-item class="ion-margin-bottom">
+            <ion-label position="stacked">Contact Person</ion-label>
+            <ion-input [(ngModel)]="modalCompany.contactPerson" name="contactPerson"></ion-input>
+          </ion-item>
+          <ion-item class="ion-margin-bottom">
+            <ion-label position="stacked">Contact Number</ion-label>
+            <ion-input [(ngModel)]="modalCompany.contactNumber" name="contactNumber"></ion-input>
+          </ion-item>
+          <ion-item class="ion-margin-bottom">
+            <ion-label position="stacked">Notes</ion-label>
+            <ion-textarea [(ngModel)]="modalCompany.notes" name="notes"></ion-textarea>
+          </ion-item>
+          <ion-footer>
+            <ion-toolbar>
+              <ion-buttons slot="end">
+                <ion-button type="submit" color="primary">{{ isEdit ? 'Save' : 'Add' }}</ion-button>
+              </ion-buttons>
+            </ion-toolbar>
+          </ion-footer>
+        </form>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  <ion-alert
+    [isOpen]="showDeleteAlert"
+    header="Delete Company"
+    message="Are you sure you want to delete this company?"
+    [buttons]="deleteAlertButtons">
+  </ion-alert>
+</ion-content>

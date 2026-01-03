@@ -1,0 +1,237 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/orders"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Order Details</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ng-container *ngIf="loading && !order">
+    <div style="display: flex; justify-content: center; align-items: center; height: 200px;">
+      <ion-spinner name="crescent"></ion-spinner>
+      <span style="margin-left: 12px;">Loading order details...</span>
+    </div>
+  </ng-container>
+  
+  <ng-container *ngIf="error && !order">
+    <ion-card color="danger">
+      <ion-card-content>
+        <ion-text color="light">{{ error }}</ion-text>
+      </ion-card-content>
+    </ion-card>
+  </ng-container>
+  
+  <ng-container *ngIf="order">
+    <!-- Order Summary Card -->
+    <ion-card class="ion-margin-bottom">
+      <ion-item lines="none" class="ion-align-items-center">
+        <ion-avatar slot="start" style="background:#f3e8ff; color:#a259ff; border-radius:12px; width:44px; height:44px; display:flex; align-items:center; justify-content:center;">
+          <ion-icon name="document-text-outline" style="font-size:1.6rem;"></ion-icon>
+        </ion-avatar>
+        <ion-label>
+          <h2 class="ion-text-wrap ion-text-bold" style="margin-bottom:2px;">Order Date: {{ order.orderDate | date }}</h2>
+          <p class="ion-text-wrap ion-text-secondary" style="font-size:0.95em; margin-bottom:0;">Status: {{ order.status }}</p>
+          <p class="ion-text-wrap ion-text-secondary" style="font-size:0.95em; margin-bottom:0;">Company: {{ order.companyName }}</p>
+          <p class="ion-text-wrap ion-text-secondary" style="font-size:0.95em; margin-bottom:0;">Delivery: {{ order.deliveryDate | date }}</p>
+          <p class="ion-text-wrap ion-text-secondary" style="font-size:0.95em; margin-bottom:0;">Completion: {{ order.completionDate | date }}</p>
+        </ion-label>
+        <ion-button fill="clear" color="primary" (click)="goToMeasurements(order)" slot="end" style="margin-left:8px;">
+          <ion-icon name="body-outline"></ion-icon>
+        </ion-button>
+      </ion-item>
+    </ion-card>
+
+    <!-- Upload Measurements Section -->
+    <ion-card class="ion-padding">
+      <h3 style="font-weight:600; margin-bottom:12px;">Upload Measurements</h3>
+      <div style="margin-bottom: 12px;">
+        <input 
+          type="file" 
+          #fileInput
+          accept=".xlsx,.xls,.csv"
+          (change)="onFileSelected($event)"
+          style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.95em;"
+        />
+        <div *ngIf="selectedFile" style="margin-top: 8px; color: #3a8bfd; font-size: 0.9em; font-weight: 500;">
+          <ion-icon name="document-outline" style="vertical-align: middle;"></ion-icon>
+          {{ selectedFile.name }}
+        </div>
+      </div>
+      <div *ngIf="uploading" style="color: #3a8bfd; margin-bottom: 8px;">
+        <ion-spinner name="crescent"></ion-spinner> Uploading measurements...
+      </div>
+      <div *ngIf="uploadSuccess" style="color: #2dd36f; margin-bottom: 8px; padding: 8px; background: #e8f5e9; border-radius: 8px;">
+        <ion-icon name="checkmark-circle-outline" style="vertical-align: middle;"></ion-icon>
+        {{ uploadSuccess }}
+      </div>
+      <div *ngIf="uploadError" style="color: #c00; margin-bottom: 8px; padding: 8px; background: #ffebee; border-radius: 8px;">
+        <ion-icon name="alert-circle-outline" style="vertical-align: middle;"></ion-icon>
+        {{ uploadError }}
+      </div>
+    </ion-card>
+
+    <!-- Production Timeline -->
+    <ion-card class="ion-padding">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom:12px;">
+        <h3 style="font-weight:600; margin:0;">Production Timeline</h3>
+        <div style="display: flex; gap: 8px;">
+          <!-- Mark Order Complete Button (when all measurements are in last phase) -->
+          <ion-button 
+            *ngIf="isReadyToComplete() && order.status !== 'Completed'" 
+            size="small" 
+            color="success" 
+            (click)="markOrderComplete()"
+            [disabled]="movingPhase">
+            <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
+            <span>Mark Order Complete</span>
+          </ion-button>
+          
+          <!-- View Measurements Button (for measurement-level phases) -->
+          <ion-button 
+            *ngIf="currentPhaseConfig && currentPhaseConfig.movementType === 'measurement-level'" 
+            size="small" 
+            color="secondary" 
+            fill="outline"
+            [routerLink]="['/orders', order.id, 'phase-measurements']"> 
+            <span>View Items</span>
+          </ion-button>
+          
+          <!-- Move to Next Phase Button -->
+          <!-- <ion-button 
+            *ngIf="currentPhaseConfig && !isLastPhase()" 
+            size="small" 
+            color="primary" 
+            (click)="moveToNextPhase()" 
+            [disabled]="movingPhase">
+            <ion-spinner *ngIf="movingPhase" name="crescent"></ion-spinner>
+            <span *ngIf="!movingPhase">
+              {{ currentPhaseConfig.movementType === 'measurement-level' ? 'Manage Items' : 'Move to Next Phase' }}
+            </span>
+          </ion-button> -->
+        </div>
+      </div>
+      
+      <!-- Loading phases indicator -->
+      <div *ngIf="loading && phaseConfigs.length === 0" style="display: flex; align-items: center; gap: 8px; color: #666; padding: 12px;">
+        <ion-spinner name="crescent"></ion-spinner>
+        <span>Loading phases...</span>
+      </div>
+      
+      <!-- Phase list -->
+      <ng-container *ngIf="phaseConfigs && phaseConfigs.length > 0; else noPhases">
+        <div *ngFor="let phase of phaseConfigs" style="display:flex; align-items:flex-start; margin-bottom:12px;">
+          <!-- Status Icon -->
+          <ion-icon *ngIf="getPhaseStatus(phase) === 'completed'" name="checkmark-circle" color="success" style="margin-right:10px; font-size:1.5em;"></ion-icon>
+          <ion-icon *ngIf="getPhaseStatus(phase) === 'current'" name="ellipse" color="warning" style="margin-right:10px; font-size:1.5em;"></ion-icon>
+          <ion-icon *ngIf="getPhaseStatus(phase) === 'skipped'" name="close-circle" color="medium" style="margin-right:10px; font-size:1.5em;"></ion-icon>
+          <ion-icon *ngIf="getPhaseStatus(phase) === 'pending'" name="ellipse-outline" color="medium" style="margin-right:10px; font-size:1.5em;"></ion-icon>
+          
+          <div style="flex:1;">
+            <div style="font-weight:700; display: flex; align-items: center; gap: 8px; font-size: 1.1em;">
+              <span>{{ phase.icon }}</span>
+              <span>{{ phase.phaseName }}</span>
+            </div>
+            
+            <!-- Phase Status -->
+            <div *ngIf="getPhaseStatus(phase) === 'current'" style="font-size:0.95em; color:#ff9800; margin-top: 4px;">
+              <strong>In Progress</strong>
+              <span *ngIf="currentPhaseConfig?.movementType === 'order-level'"> - Order Level Phase</span>
+              <ng-container *ngIf="currentPhaseConfig?.movementType === 'measurement-level'">
+                <span> - {{ getMeasurementCountForPhase(phase.id) }} of {{ getTotalMeasurements() }}</span>
+              </ng-container>
+            </div>
+            
+            <div *ngIf="getPhaseStatus(phase) === 'completed'" style="font-size:0.95em; color:#2dd36f; margin-top: 4px;">
+              <strong>Completed</strong>
+              <!-- Show REAL-TIME count for measurement-level phases -->
+              <ng-container *ngIf="phase.movementType === 'measurement-level'">
+                <span> - {{ getMeasurementCountForPhase(phase.id) }} of {{ getTotalMeasurements() }}</span>
+              </ng-container>
+            </div>
+            
+            <div *ngIf="getPhaseStatus(phase) === 'pending'" style="font-size:0.95em; color:#92949c; margin-top: 4px;">
+              <strong>Pending</strong>
+              <!-- Show if measurements are already in this "pending" phase (parallel processing) -->
+              <ng-container *ngIf="phase.movementType === 'measurement-level' && getMeasurementCountForPhase(phase.id) > 0">
+                <span style="color: #ff9800;"> - {{ getMeasurementCountForPhase(phase.id) }} of {{ getTotalMeasurements() }} items already in this phase</span>
+              </ng-container>
+            </div>
+            
+            <div *ngIf="getPhaseStatus(phase) === 'skipped'" style="font-size:0.95em; color:#92949c; margin-top: 4px;">
+              Skipped
+              <span *ngIf="order?.skippedPhases">
+                <ng-container *ngFor="let sp of order.skippedPhases">
+                  <span *ngIf="sp.phaseId === phase.id"> - {{ sp.reason }}</span>
+                </ng-container>
+              </span>
+            </div>
+          </div>
+          
+          <!-- Action Button: Different buttons based on phase type and measurements -->
+          <div *ngIf="getMeasurementCountForPhase(phase.id) > 0 || (getPhaseStatus(phase) === 'current' && phase.movementType === 'order-level' && !isLastPhase())" 
+               style="margin-left:8px;">
+            
+            <!-- For ORDER-LEVEL phases with measurements: "Complete" button to move all measurements -->
+            <ion-button *ngIf="phase.movementType === 'order-level' && getMeasurementCountForPhase(phase.id) > 0" 
+                        size="small" 
+                        color="primary" 
+                        (click)="completePhaseAndMoveAllMeasurements(phase)" 
+                        [disabled]="movingPhase">
+              <ion-spinner *ngIf="movingPhase" name="crescent"></ion-spinner>
+              <span *ngIf="!movingPhase">Complete</span>
+            </ion-button>
+            
+            <!-- For MEASUREMENT-LEVEL phases with measurements: "Manage" button for individual management -->
+            <ion-button *ngIf="phase.movementType === 'measurement-level' && getMeasurementCountForPhase(phase.id) > 0" 
+                        size="small" 
+                        color="secondary" 
+                        fill="outline"
+                        (click)="viewPhaseMeasurements(phase)">
+              Manage
+            </ion-button>
+            
+            <!-- For order-level phases without measurements: Complete/Skip button -->
+            <ion-button *ngIf="phase.movementType === 'order-level' && getMeasurementCountForPhase(phase.id) === 0 && getPhaseStatus(phase) === 'current' && !isLastPhase()" 
+                        size="small" 
+                        color="primary" 
+                        (click)="moveToNextPhase()" 
+                        [disabled]="movingPhase">
+              <ion-spinner *ngIf="movingPhase" name="crescent"></ion-spinner>
+              <span *ngIf="!movingPhase && !phase.canSkip">Complete</span>
+              <span *ngIf="!movingPhase && phase.canSkip">Complete / Skip</span>
+            </ion-button>
+          </div>
+        </div>
+      </ng-container>
+      <ng-template #noPhases>
+        <div style="padding: 20px; text-align: center; background: #f8f9fa; border-radius: 8px;">
+          <ion-icon name="alert-circle-outline" color="medium" style="font-size: 3em;"></ion-icon>
+          <p style="color: #666; margin-top: 12px; margin-bottom: 8px;">No production phases available for this order.</p>
+          <p style="font-size: 0.85em; color: #999;">
+            Order ID: {{ order?.id }}<br>
+            Phase Config IDs: {{ order?.phaseConfigIds?.length || 0 }} configured
+          </p>
+        </div>
+      </ng-template>
+    </ion-card>
+  </ng-container>
+
+  <!-- Alert for choosing upload mode -->
+  <ion-alert
+    [isOpen]="showUploadModeAlert"
+    header="Upload Measurements"
+    message="Do you want to add to existing measurements or replace all measurements for this order?"
+    [buttons]="uploadModeButtons">
+  </ion-alert>
+  
+  <!-- Alert for skipping phase -->
+  <ion-alert
+    [isOpen]="showSkipAlert"
+    header="Phase Action"
+    message="Do you want to complete or skip this phase?"
+    [inputs]="skipAlertInputs"
+    [buttons]="skipAlertButtons">
+  </ion-alert>
+</ion-content> 
