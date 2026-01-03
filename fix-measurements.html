@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Fix Measurement Phases - Admin Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-top: 0;
+        }
+        .button {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            margin-top: 20px;
+        }
+        .button:hover {
+            background: #45a049;
+        }
+        .button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .loading {
+            text-align: center;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Fix Measurement Phases</h1>
+        
+        <div class="info">
+            <strong>What this does:</strong>
+            <p>This tool will initialize phase tracking for all measurements that don't have it yet. It will set each measurement's current phase to match its order's current phase.</p>
+            <p><strong>This is safe to run multiple times.</strong> It will only update measurements that are missing phase information.</p>
+        </div>
+
+        <button class="button" onclick="fixMeasurements()" id="fixBtn">
+            Fix All Measurements
+        </button>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        async function fixMeasurements() {
+            const btn = document.getElementById('fixBtn');
+            const resultDiv = document.getElementById('result');
+            
+            btn.disabled = true;
+            btn.textContent = 'Processing...';
+            resultDiv.innerHTML = '<div class="loading">⏳ Fixing measurements... Please wait...</div>';
+
+            try {
+                const response = await fetch('http://localhost:8080/api/admin/fix-measurement-phases', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="result success">
+                            <h3>✅ Success!</h3>
+                            <p><strong>Fixed:</strong> ${data.fixedCount} measurements</p>
+                            <p><strong>Errors:</strong> ${data.errorCount} measurements</p>
+                            <p style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #c3e6cb;">
+                                <strong>Next Steps:</strong><br>
+                                1. Refresh your application<br>
+                                2. Navigate to any order's phase measurements screen<br>
+                                3. You should now see all measurements listed!
+                            </p>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="result error">
+                            <h3>❌ Error</h3>
+                            <p>${data.message}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <h3>❌ Connection Error</h3>
+                        <p>Could not connect to the backend server.</p>
+                        <p><strong>Make sure:</strong></p>
+                        <ul>
+                            <li>Backend is running on http://localhost:8080</li>
+                            <li>You've restarted the backend after the latest changes</li>
+                        </ul>
+                    </div>
+                `;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Fix All Measurements';
+            }
+        }
+    </script>
+</body>
+</html>
+

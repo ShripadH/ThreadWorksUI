@@ -1,0 +1,95 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button [defaultHref]="'/orders/details/' + orderId"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Measurements</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ng-container *ngIf="loading">
+    <ion-spinner name="crescent"></ion-spinner> Loading measurements...
+  </ng-container>
+  <ng-container *ngIf="error && !loading">
+    <ion-text color="danger">{{ error }}</ion-text>
+  </ng-container>
+  <ng-container *ngIf="!loading && !error">
+    <ion-searchbar [(ngModel)]="searchTerm" placeholder="Search by name, ID, or Prod Sr..." class="ion-margin-bottom"></ion-searchbar>
+    <div *ngIf="filteredMeasurements.length === 0">
+      <ion-text color="medium">No measurements found for this order.</ion-text>
+    </div>
+    <ion-card *ngFor="let m of filteredMeasurements; let i = index" class="ion-margin-bottom">
+      <ion-item button (click)="toggleExpand(i)">
+        <ion-avatar slot="start" style="background:#e0e7ff; color:#3a8bfd; border-radius:12px; width:44px; height:44px; display:flex; align-items:center; justify-content:center;">
+          <ion-icon name="person-outline" style="font-size:1.6rem;"></ion-icon>
+        </ion-avatar>
+        <ion-label>
+          <div style="font-weight:600;">{{ m.employeeName }}</div>
+          <div style="font-size:0.98em; color:#666;">ID: {{ m.empId }} | Dept: {{ m.department }}</div>
+          <div style="font-size:0.98em; color:#666;">Prod Sr: {{ m['prodSr'] }} </div>
+         
+        </ion-label>
+        <ion-icon [name]="expandedIndex === i ? 'chevron-up-outline' : 'chevron-down-outline'" slot="end"></ion-icon>
+      </ion-item>
+      <div *ngIf="expandedIndex === i" style="padding: 12px 18px 10px 18px; background: #fafbfc; border-top: 1px solid #eee;">
+        <ng-container *ngFor="let category of ['Apron', 'Full Shirt', 'Half Shirt', 'Shirt', 'Tshirt', 'Trousers']">
+          <ng-container *ngIf="getFieldsByCategory(m, category).length > 0">
+            <div style="font-weight:600; color:#3a8bfd; margin-top:10px; margin-bottom:4px;">{{ category }}</div>
+            <div *ngFor="let field of getFieldsByCategory(m, category)">
+              <span style="font-weight:500; color:#444;">{{ field.key }}:</span>
+              <span style="margin-left:8px; color:#333;">{{ field.value }}</span>
+            </div>
+          </ng-container>
+        </ng-container>
+        <div style="display:flex; gap:12px; margin-top:12px;">
+          <ion-button size="small" fill="outline" color="primary" (click)="editMeasurement(m)">
+            <ion-icon name="create-outline" slot="start"></ion-icon>
+            Edit
+          </ion-button>
+          <ion-button size="small" fill="outline" color="danger" (click)="deleteMeasurement(m, i)">
+            <ion-icon name="trash-outline" slot="start"></ion-icon>
+            Delete
+          </ion-button>
+        </div>
+      </div>
+    </ion-card>
+  </ng-container>
+
+  <div *ngIf="showEditModal" class="edit-modal-overlay">
+    <div class="edit-modal">
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>Edit Measurement</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="cancelEdit()">
+              <ion-icon name="close"></ion-icon>
+            </ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <div class="ion-padding">
+        <form (ngSubmit)="saveEdit()">
+          <ng-container *ngFor="let category of ['Apron', 'Full Shirt', 'Half Shirt', 'Shirt', 'Tshirt', 'Trousers']">
+            <ng-container *ngIf="(editCategoryFields[category] || []).length > 0">
+              <div style="font-weight:600; color:#3a8bfd; margin-top:10px; margin-bottom:4px;">{{ category }}</div>
+              <div *ngFor="let field of editCategoryFields[category]">
+                <ion-item>
+                  <ion-label position="stacked">{{ field.key }}</ion-label>
+                  <ion-input [(ngModel)]="editForm[field.key]" name="{{ field.key }}"></ion-input>
+                </ion-item>
+              </div>
+            </ng-container>
+          </ng-container>
+          <div style="display:flex; gap:12px; margin-top:18px; justify-content:center;">
+            <ion-button type="submit" color="primary" [disabled]="savingEdit">
+              <ion-spinner *ngIf="savingEdit" name="crescent"></ion-spinner>
+              <span *ngIf="!savingEdit">Save</span>
+            </ion-button>
+            <ion-button type="button" color="medium" (click)="cancelEdit()" [disabled]="savingEdit">Cancel</ion-button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</ion-content>

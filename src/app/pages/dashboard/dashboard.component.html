@@ -1,0 +1,69 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Dashboard</ion-title>
+    <ion-buttons slot="end">
+      <ion-menu-button menu="right-menu"></ion-menu-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ng-container *ngIf="loading">
+    <ion-spinner name="crescent"></ion-spinner> Loading dashboard stats...
+  </ng-container>
+  <ng-container *ngIf="error && !loading">
+    <ion-text color="danger">{{ error }}</ion-text>
+  </ng-container>
+  <ng-container *ngIf="summary && !loading && !error">
+    <div class="dashboard-quick-actions">
+      <button ion-button class="quick-action-btn" (click)="addCompany()">
+        <ion-icon name="business-outline"></ion-icon>
+        <span>Add Company</span>
+      </button>
+      <button ion-button class="quick-action-btn" (click)="createOrder()">
+        <ion-icon name="add-circle-outline"></ion-icon>
+        <span>Create Order</span>
+      </button>
+      <button ion-button class="quick-action-btn" (click)="configurePhases()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+        <ion-icon name="settings-outline"></ion-icon>
+        <span>Configure Phases</span>
+      </button>
+    </div>
+    <div class="dashboard-cards-row">
+      
+      <div class="dashboard-card dashboard-card-orange" (click)="goToCompanies()">
+        <div class="dashboard-card-title">Companies In Progress</div>
+        <div class="dashboard-card-value">{{ summary.companiesInProgress }} <span class="dashboard-card-subvalue"> of {{ summary.totalCompanies }}</span></div>
+      </div>
+      <div class="dashboard-card dashboard-card-orange" (click)="goToOrders()">
+        <div class="dashboard-card-title">Orders In Progress</div>
+        <div class="dashboard-card-value">{{ summary.ordersInProgress }} <span class="dashboard-card-subvalue"> of {{ summary.totalOrders }}</span></div>
+      </div>
+      <div class="dashboard-card dashboard-card-purple">
+        <div class="dashboard-card-title">Measurements In Progress</div>
+        <div class="dashboard-card-value">{{ summary.totalMeasurementsInProgress }}<span class="dashboard-card-subvalue"> of {{ totalMeasurements }}</span></div>
+      </div>
+    </div>
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>Workshop Snapshot</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <table class="dashboard-table">
+          <thead>
+            <tr class="dashboard-table-header-row">
+              <th class="dashboard-table-header">State</th>
+              <th class="dashboard-table-header dashboard-table-header-right">Count</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of summary.workshopSnapshot">
+              <td class="dashboard-table-cell">{{ row.state }}</td>
+              <td class="dashboard-table-cell dashboard-table-cell-right">{{ row.count }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </ion-card-content>
+    </ion-card>
+  </ng-container>
+</ion-content>

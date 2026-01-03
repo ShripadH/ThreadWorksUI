@@ -1,18 +1,81 @@
-/*
- * App Global CSS
- * ----------------------------------------------------------------------------
- * Put style rules here that you want to apply globally. These styles are for
- * the entire app and not just one component. Additionally, this file can be
- * used as an entry point to import other CSS/Sass files to be included in the
- * output CSS.
- * For more information on global stylesheets, visit the documentation:
- * https://ionicframework.com/docs/layout/global-stylesheets
- */
+// Custom App Styles (formerly theme/app.scss)
+$grey: #3a5160;
+
+:root {
+  --color-notWhite: rgba(237, 240, 242, 0.5);
+  --color-darkgrey: #313a44;
+  --color-nearlyBlack: #213333;
+  --color-darkText: #253840;
+  --color-username: $grey;
+  --shadow-color: rgb(128, 128, 128, 0.6);
+  --shadow-color2: rgb(158, 158, 158, 0.6);
+  --feedback-input-bg: white;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-notWhite: rgb(33, 37, 41);
+    --color-darkgrey: #fefefe;
+    --color-nearlyBlack: #fefefe;
+    --color-darkText: #fefefe;
+    --color-username: #fefefe;
+    --shadow-color: #000000;
+    --shadow-color2: #212121;
+    --feedback-input-bg: rgb(255, 255, 255, 0.04);
+  }
+  .ios body,
+  .md body {
+    --ion-background-color: rgb(44, 48, 54);
+  }
+}
+
+.divider {
+  height: 0.5px;
+  background-color: rgba(58, 81, 96, 0.4);
+}
+
+@font-face {
+  font-family: "WorkSans-Bold";
+  src: url(./assets/fonts/WorkSans-Bold.ttf);
+}
+@font-face {
+  font-family: "WorkSans-Medium";
+  src: url(./assets/fonts/WorkSans-Medium.ttf);
+}
+@font-face {
+  font-family: "WorkSans-Regular";
+  src: url(./assets/fonts/WorkSans-Regular.ttf);
+}
+@font-face {
+  font-family: "WorkSans-SemiBold";
+  src: url(./assets/fonts/WorkSans-SemiBold.ttf);
+}
+@font-face {
+  font-family: "Material Icons";
+  font-style: normal;
+  font-weight: 400;
+  src: local("Material Icons"), local("MaterialIcons-Regular"), url("./assets/fonts/MaterialIcons-Regular.ttf") format("truetype");
+}
+.material-icons {
+  font-family: "Material Icons";
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px; 
+  display: inline-block;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: normal;
+  word-wrap: normal;
+  white-space: nowrap;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "liga";
+}
 
 /* Core CSS required for Ionic components to work properly */
 @import "@ionic/angular/css/core.css";
-
-/* Basic CSS for apps built with Ionic */
 @import "@ionic/angular/css/normalize.css";
 @import "@ionic/angular/css/structure.css";
 @import "@ionic/angular/css/typography.css";
@@ -31,7 +94,4 @@
  * For more info, please see:
  * https://ionicframework.com/docs/theming/dark-mode
  */
-
-/* @import "@ionic/angular/css/palettes/dark.always.css"; */
-/* @import "@ionic/angular/css/palettes/dark.class.css"; */
 @import "@ionic/angular/css/palettes/dark.system.css";

@@ -1,0 +1,21 @@
+<p>
+  login works!
+</p>
+
+<ion-content class="ion-padding ion-text-center">
+  <div style="margin-top: 30vh;">
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>Sign in to Continue</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-button expand="block" color="primary" (click)="onGoogleLogin()" [disabled]="loading">
+          <ion-icon name="logo-google" slot="start"></ion-icon>
+          Login with Google
+        </ion-button>
+        <ion-spinner *ngIf="loading" name="crescent"></ion-spinner>
+        <ion-text color="danger" *ngIf="error">{{ error }}</ion-text>
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>

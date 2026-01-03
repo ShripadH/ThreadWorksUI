@@ -1,0 +1,168 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button [defaultHref]="order ? '/orders/details/' + order.id : '/orders'"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Measurements by Phase</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ng-container *ngIf="loading">
+    <div style="display: flex; justify-content: center; align-items: center; height: 200px;">
+      <ion-spinner name="crescent"></ion-spinner>
+    </div>
+  </ng-container>
+
+  <ng-container *ngIf="error && !loading">
+    <ion-card color="danger">
+      <ion-card-content>
+        <ion-text color="light">{{ error }}</ion-text>
+      </ion-card-content>
+    </ion-card>
+  </ng-container>
+
+  <ng-container *ngIf="!loading && !error && order">
+    <!-- Order Info Card -->
+    <ion-card class="ion-margin-bottom">
+      <ion-card-header>
+        <ion-card-title style="font-size: 1.1em;">Order: {{ order.companyName }}</ion-card-title>
+        <ion-card-subtitle>{{ order.orderDate | date }}</ion-card-subtitle>
+      </ion-card-header>
+    </ion-card>
+
+    <!-- Phase Selector -->
+    <ion-card class="ion-margin-bottom">
+      <ion-card-content style="padding: 12px;">
+        <ion-label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">
+          Select Phase to View:
+        </ion-label>
+        <div style="display: flex; gap: 8px; overflow-x: auto; overflow-y: hidden; padding-bottom: 8px; -webkit-overflow-scrolling: touch; scrollbar-width: thin;">
+          <ion-button 
+            *ngFor="let phase of allPhases" 
+            [fill]="selectedPhase?.id === phase.id ? 'solid' : 'outline'"
+            [color]="selectedPhase?.id === phase.id ? 'primary' : 'medium'"
+            size="small"
+            style="flex-shrink: 0; white-space: nowrap;"
+            (click)="changePhase(phase)">
+            <span style="display: flex; align-items: center; gap: 6px;">
+              <span>{{ phase.icon }}</span>
+              <span>{{ phase.phaseName }}</span>
+              <ion-badge [color]="getMeasurementCountByPhase(phase) > 0 ? 'success' : 'light'" 
+                         style="margin-left: 4px;">
+                {{ getMeasurementCountByPhase(phase) }}
+              </ion-badge>
+            </span>
+          </ion-button>
+        </div>
+        <div style="font-size: 0.8em; color: #666; margin-top: 4px; text-align: center;">
+          ← Swipe to see all phases →
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Selected Phase Info -->
+    <ion-card *ngIf="selectedPhase" class="ion-margin-bottom" 
+              [style.background]="selectedPhase.id === currentPhase?.id ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'" 
+              style="color: white;">
+      <ion-card-content style="padding: 16px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span style="font-size: 2.5em;">{{ selectedPhase.icon }}</span>
+          <div style="flex: 1;">
+            <h2 style="margin: 0; font-size: 1.3em; font-weight: 600;">{{ selectedPhase.phaseName }}</h2>
+            <p style="margin: 4px 0 0 0; opacity: 0.9; font-size: 0.9em;">
+              {{ getMeasurementsInCurrentPhase().length }} measurement(s) in this phase
+            </p>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-end;">
+            <ion-badge *ngIf="selectedPhase.id === currentPhase?.id" color="success" style="font-size: 0.75em;">
+              Current Order Phase
+            </ion-badge>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Measurements List -->
+    <ion-card *ngIf="getMeasurementsInCurrentPhase().length === 0">
+      <ion-card-content>
+        <ion-text color="medium">
+          <p style="text-align: center; padding: 20px;">
+            No measurements in this phase. All measurements have moved to the next phase.
+          </p>
+          <ion-button expand="block" (click)="goBack()">
+            Go Back to Order Details
+          </ion-button>
+        </ion-text>
+      </ion-card-content>
+    </ion-card>
+
+    <div *ngFor="let measurement of getMeasurementsInCurrentPhase()" class="ion-margin-bottom">
+      <ion-card>
+        <ion-card-content style="padding: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
+            <!-- Measurement Details -->
+            <div style="flex: 1;">
+              <h3 style="margin: 0 0 8px 0; font-weight: 600; font-size: 1.1em;">
+                {{ measurement['empName'] || 'N/A' }}
+              </h3>
+              <div style="display: grid; grid-template-columns: 120px 1fr; gap: 4px 12px; font-size: 0.9em; color: #666;">
+                <span style="font-weight: 500;">Employee ID:</span>
+                <span>{{ measurement['empId'] || 'N/A' }}</span>
+                
+                <span style="font-weight: 500;">Gender:</span>
+                <span>{{ measurement['gender'] || 'N/A' }}</span>
+                
+                <span style="font-weight: 500;">Department:</span>
+                <span>{{ measurement['department'] || 'N/A' }}</span>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div style="display: flex; flex-direction: column; gap: 8px; min-width: 120px;">
+              <!-- Move to Next Phase Button -->
+              <ion-button 
+                size="small" 
+                expand="block" 
+                color="primary" 
+                (click)="moveToNextPhase(measurement)"
+                [disabled]="movingMeasurementId === measurement.id">
+                <ion-spinner *ngIf="movingMeasurementId === measurement.id" name="crescent"></ion-spinner>
+                <span *ngIf="movingMeasurementId !== measurement.id">
+                  <ion-icon name="arrow-forward" slot="start"></ion-icon>
+                  {{ currentPhase?.canSkip ? 'Action' : 'Complete' }}
+                </span>
+              </ion-button>
+
+              <!-- Reject Button (only show in QC phase or if there are previous phases) -->
+              <ion-button 
+                *ngIf="previousPhases.length > 0"
+                size="small" 
+                expand="block" 
+                color="danger" 
+                fill="outline"
+                (click)="rejectToPreviousPhase(measurement)"
+                [disabled]="movingMeasurementId === measurement.id">
+                <ion-icon name="arrow-back" slot="start"></ion-icon>
+                Reject
+              </ion-button>
+            </div>
+          </div>
+
+          <!-- Rejection History (if any) -->
+          <div *ngIf="measurement['skippedPhases'] && measurement['skippedPhases'].length > 0" 
+               style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e0e0e0;">
+            <div style="font-size: 0.85em; color: #666;">
+              <strong style="color: #d32f2f;">Rejection History:</strong>
+              <div *ngFor="let skip of measurement['skippedPhases']" style="margin-top: 4px; padding-left: 8px;">
+                <ion-icon name="alert-circle" color="danger" style="font-size: 0.9em;"></ion-icon>
+                {{ skip.reason }}
+              </div>
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+  </ng-container>
+</ion-content>
+
